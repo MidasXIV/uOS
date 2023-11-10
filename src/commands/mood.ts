@@ -1,16 +1,16 @@
-const { Command } = require("@oclif/command");
+import {Command} from '@oclif/core';
+
 const fileAccessor = require("../utils/file");
 const inquirer = require("inquirer");
 
-class MoodCommand extends Command {
+export default class MoodCommand extends Command {
+  static description = "";
+
   async run() {
     const filePath = fileAccessor.getCurrentFilePath();
 
-    let responses = await inquirer.prompt([
+    const responses = await inquirer.prompt([
       {
-        name: "mood",
-        message: "Name the feeling? (Pick the first you relate to atm)",
-        type: "list",
         choices: [
           "Happy/Aliveness",
           "Despair/Sad",
@@ -31,26 +31,29 @@ class MoodCommand extends Command {
           "Tender/Reflective",
           "Unsettled/Doubt",
         ],
+        message: "Name the feeling? (Pick the first you relate to atm)",
+        name: "mood",
+        type: "list",
       },
       {
-        name: "what",
         message: "What caused this feeling?",
+        name: "what",
         type: "input",
       },
       {
-        name: "actions",
         message: "Behaviors or actions this feeling caused me to take?",
+        name: "actions",
         type: "input",
       },
       {
-        name: "isAppropriate",
         message: "Is this feeling appropriate to the situation?",
+        name: "isAppropriate",
         type: "input",
       },
       {
-        name: "fix",
         message:
           "What can I do to improve/fix it? (Remember to be kind to yourself)",
+        name: "fix",
         type: "input",
       },
     ]);
@@ -63,6 +66,3 @@ class MoodCommand extends Command {
   }
 }
 
-MoodCommand.description = "";
-
-module.exports = MoodCommand;

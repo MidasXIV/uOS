@@ -1,8 +1,8 @@
-const fs = require("fs");
-const os = require("os");
+const fs = require("node:fs");
+const os = require("node:os");
 const dateFormat = require("dateformat");
 const homedir = os.homedir();
-const dir = `${homedir}/atm_logs`;
+const dir = `${homedir}/uOS_logs`;
 
 const timeStamp = () => {
   const now = new Date();
@@ -18,7 +18,7 @@ const writeLineToCurrentFile = (line, type = null) => {
   });
 
   if (line) {
-    fs.appendFile(filePath, lineWithEOL, function (err) {
+    fs.appendFile(filePath, lineWithEOL, (err) => {
       if (err) console.log(`🤖 Something went wrong`);
 
       console.log(`👏 Logged to ${filePath}`);
@@ -28,7 +28,7 @@ const writeLineToCurrentFile = (line, type = null) => {
     // If it's a quote then also write to a dedicated file
     // for easier access later.
     if (type && type == "quote") {
-      fs.appendFile(`${dir}/atm_quotes.txt`, lineWithEOL, function (err) {
+      fs.appendFile(`${dir}/atm_quotes.txt`, lineWithEOL, (err) => {
         if (err) console.log(`🤖 Something went wrong`);
         console.log(`🧠 I'll also remember this quote for you!`);
       });
@@ -37,7 +37,7 @@ const writeLineToCurrentFile = (line, type = null) => {
 };
 
 const getLastXFilePaths = (x = 7) => {
-  const result = [];
+  const result: any[] = [];
 
   for (let i = 0; i < x; i++) {
     const d = new Date();
@@ -65,6 +65,7 @@ const getRandomQuote = () => {
   if (!fs.existsSync(filePath)) {
     return;
   }
+
   const rawQuotes = fs.readFileSync(filePath).toString("utf-8");
   const quotes = rawQuotes.split(os.EOL);
   const quoteString = quotes[Math.floor(Math.random() * quotes.length)];

@@ -2,7 +2,11 @@
 *-error.log
 /.nyc_output
 /dist
+/lib
 /package-lock.json
 /tmp
 node_modules
-.DS_Store
+oclif.manifest.json
+oclif.lock
+**/.DS_Store
+/.idea

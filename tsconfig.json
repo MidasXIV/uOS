@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "declaration": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "Node16",
+    "outDir": "./dist",
+    "pretty": true,
+    "rootDirs": ["./src"],
+    "strict": true,
+    "target": "ES2022",
+    "noImplicitAny": false,
+    "allowSyntheticDefaultImports": true,
+    "noErrorTruncation": true,
+    "moduleResolution": "Node16"
+  },
+  "include": ["./src/**/*"]
+}

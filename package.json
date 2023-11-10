@@ -3,32 +3,44 @@
   "version": "0.5.1",
   "author": "Udara Jay @UdaraJay",
   "bin": {
-    "atm": "./bin/run"
+    "uos": "./bin/run.js"
   },
   "bugs": "https://github.com/UdaraJay/atm/issues",
   "dependencies": {
-    "@oclif/command": "^1",
-    "@oclif/config": "^1",
-    "@oclif/plugin-help": "^3",
+    "@oclif/core": "^3.10.8",
     "dateformat": "^3.0.3",
     "inquirer": "^7.3.3",
     "read-each-line-sync": "^1.0.5",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "@oclif/plugin-help": "^5",
+    "@oclif/plugin-plugins": "^4"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
-    "eslint": "^5.13",
-    "eslint-config-oclif": "^3.1",
-    "globby": "^10"
+    "globby": "^10",
+    "@oclif/prettier-config": "^0.2.1",
+    "@oclif/test": "^3",
+    "@types/chai": "^4",
+    "@types/mocha": "^9.0.0",
+    "@types/node": "^18",
+    "chai": "^4",
+    "eslint-config-oclif-typescript": "^3",
+    "eslint-config-oclif": "^5",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint": "^8.53.0",
+    "mocha": "^10",
+    "oclif": "^3.17.2",
+    "shx": "^0.3.3",
+    "ts-node": "^10.9.1",
+    "typescript": "^5"
   },
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=18.0.0"
   },
   "files": [
     "/bin",
-    "/npm-shrinkwrap.json",
-    "/oclif.manifest.json",
-    "/src"
+    "/dist",
+    "/oclif.manifest.json"
   ],
   "homepage": "https://github.com/UdaraJay/atm",
   "keywords": [
@@ -36,19 +48,33 @@
     "logging"
   ],
   "license": "MIT",
-  "main": "src/index.js",
+  "main": "dist/index.js",
   "oclif": {
-    "commands": "./src/commands",
-    "bin": "atm",
+    "bin": "uos",
+    "dirname": "uos",
+    "commands": "./dist/commands",
     "plugins": [
-      "@oclif/plugin-help"
-    ]
+      "@oclif/plugin-help",
+      "@oclif/plugin-plugins"
+    ],
+    "additionalHelpFlags": ["-h"],
+    "topicSeparator": " ",
+    "topics": {
+      "hello": {
+        "description": "Say hello to the world and others"
+      }
+    }
   },
-  "repository": "UdaraJay/atm",
+  "repository": "UdaraJay/uos",
   "scripts": {
-    "postpack": "rm -f oclif.manifest.json",
-    "posttest": "eslint .",
-    "prepack": "oclif-dev manifest && oclif-dev readme",
-    "test": "echo NO TESTS"
-  }
+    "build": "shx rm -rf dist && tsc -b",
+    "lint": "eslint . --ext .ts",
+    "postpack": "shx rm -f oclif.manifest.json",
+    "posttest": "yarn lint",
+    "prepack": "yarn build && oclif manifest && oclif readme",
+    "prepare": "yarn build",
+    "test": "echo NO TESTS",
+    "version": "oclif readme && git add README.md"
+  },
+  "types": "dist/index.d.ts"
 }
