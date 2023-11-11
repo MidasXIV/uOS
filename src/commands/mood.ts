@@ -1,13 +1,13 @@
 import {Command} from '@oclif/core';
+import inquirer from "inquirer";
 
-const fileAccessor = require("../utils/file");
-const inquirer = require("inquirer");
+import { getCurrentFilePath, timeStamp, writeLineToCurrentFile } from '../utils/file';
 
 export default class MoodCommand extends Command {
   static description = "";
 
   async run() {
-    const filePath = fileAccessor.getCurrentFilePath();
+    const filePath = getCurrentFilePath();
 
     const responses = await inquirer.prompt([
       {
@@ -58,11 +58,11 @@ export default class MoodCommand extends Command {
       },
     ]);
 
-    const time = fileAccessor.timeStamp();
+    const time = timeStamp();
     const meta = `what:${responses.what}, actions:${responses.actions}, isAppropriate:${responses.isAppropriate}, fix:${responses.fix}`;
     const line = `${time} | mood | ${meta} | ${responses.mood}`;
 
-    fileAccessor.writeLineToCurrentFile(line);
+    writeLineToCurrentFile(line);
   }
 }
 

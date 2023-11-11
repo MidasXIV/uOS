@@ -1,81 +1,75 @@
-const fs = require("node:fs");
-const os = require("node:os");
-const dateFormat = require("dateformat");
-const homedir = os.homedir();
-const dir = `${homedir}/uOS_logs`;
+import dateFormat from 'dateformat'
+import fs, { PathLike } from 'node:fs'
+import os from 'node:os'
+const homedir = os.homedir()
+export const dir = `${homedir}/uOS_logs`
 
-const timeStamp = () => {
-  const now = new Date();
-  return dateFormat(now, "HH:MM");
-};
+export const timeStamp = () => {
+  const now = new Date()
+  return dateFormat(now, 'HH:MM')
+}
 
-const writeLineToCurrentFile = (line, type = null) => {
-  const lineWithEOL = line + os.EOL;
-  const filePath = getCurrentFilePath();
+export const writeLineToCurrentFile = (line, type: null | string = null) => {
+  const lineWithEOL = line + os.EOL
+  const filePath = getCurrentFilePath()
 
-  fs.mkdir(dir, { recursive: true }, (err) => {
-    if (err) console.log(err);
-  });
+  fs.mkdir(dir, {recursive: true}, (err) => {
+    if (err) console.log(err)
+  })
 
   if (line) {
     fs.appendFile(filePath, lineWithEOL, (err) => {
-      if (err) console.log(`🤖 Something went wrong`);
+      if (err) console.log(`🤖 Something went wrong`)
 
-      console.log(`👏 Logged to ${filePath}`);
-      console.log("🧠", getRandomQuote());
-    });
+      console.log(`👏 Logged to ${filePath}`)
+      console.log('🧠', getRandomQuote())
+    })
 
     // If it's a quote then also write to a dedicated file
     // for easier access later.
-    if (type && type == "quote") {
+    if (type && type === 'quote') {
       fs.appendFile(`${dir}/atm_quotes.txt`, lineWithEOL, (err) => {
-        if (err) console.log(`🤖 Something went wrong`);
-        console.log(`🧠 I'll also remember this quote for you!`);
-      });
+        if (err) console.log(`🤖 Something went wrong`)
+        console.log(`🧠 I'll also remember this quote for you!`)
+      })
     }
   }
-};
+}
 
-const getLastXFilePaths = (x = 7) => {
-  const result: any[] = [];
+export const getLastXFilePaths = (x = 7) => {
+  const result: PathLike[] = []
 
   for (let i = 0; i < x; i++) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const fileName = dateFormat(d, "dd-mm-yyyy");
-    const filePath = `${dir}/${fileName}.txt`;
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const fileName = dateFormat(d, 'dd-mm-yyyy')
+    const filePath = `${dir}/${fileName}.txt`
 
-    result.push(filePath);
+    result.push(filePath)
   }
 
-  return result;
-};
+  return result
+}
 
-const getCurrentFilePath = () => {
-  const now = new Date();
-  const fileName = dateFormat(now, "dd-mm-yyyy");
-  const filePath = `${dir}/${fileName}.txt`;
+export const getCurrentFilePath = () => {
+  const now = new Date()
+  const fileName = dateFormat(now, 'dd-mm-yyyy')
+  const filePath = `${dir}/${fileName}.txt`
 
-  return filePath;
-};
+  return filePath
+}
 
 const getRandomQuote = () => {
-  const filePath = `${dir}/atm_quotes.txt`;
+  const filePath = `${dir}/atm_quotes.txt`
 
   if (!fs.existsSync(filePath)) {
-    return;
+    return
   }
 
-  const rawQuotes = fs.readFileSync(filePath).toString("utf-8");
-  const quotes = rawQuotes.split(os.EOL);
-  const quoteString = quotes[Math.floor(Math.random() * quotes.length)];
-  const quote = quoteString.split("|").pop();
+  const rawQuotes = fs.readFileSync(filePath).toString('utf8')
+  const quotes = rawQuotes.split(os.EOL)
+  const quoteString = quotes[Math.floor(Math.random() * quotes.length)]
+  const quote = quoteString.split('|').pop()
 
-  return quote;
-};
-
-exports.getCurrentFilePath = getCurrentFilePath;
-exports.getLastXFilePaths = getLastXFilePaths;
-exports.writeLineToCurrentFile = writeLineToCurrentFile;
-exports.timeStamp = timeStamp;
-exports.dir = dir;
+  return quote
+}

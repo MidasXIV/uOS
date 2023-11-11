@@ -1,7 +1,8 @@
 import { Args, Command, Flags, ux } from "@oclif/core";
-const fs = require("node:fs");
-const fileAccessor = require("../utils/file");
-const readEachLineSync = require("read-each-line-sync");
+import fs from "node:fs";
+import readEachLineSync from "read-each-line-sync";
+
+import { getLastXFilePaths } from "../utils/file";
 
 export default class ReviewCommand extends Command {
   static args = {
@@ -53,7 +54,7 @@ export default class ReviewCommand extends Command {
     };
 
     const timeUnit = timeUnits[args.timespan];
-    const filePaths = fileAccessor.getLastXFilePaths(timeUnit);
+    const filePaths = getLastXFilePaths(timeUnit);
 
     const types: any[] = [];
     const moods: any[] = [];
@@ -86,10 +87,10 @@ export default class ReviewCommand extends Command {
           metaData[metaVars[0]] = metaVars[1];
         }
 
-        isNaN(types[type]) ? (types[type] = 1) : (types[type] += 1);
+        Number.isNaN(types[type]) ? (types[type] = 1) : (types[type] += 1);
 
-        if (type == "mood") {
-          isNaN(moods[message]) ? (moods[message] = 1) : (moods[message] += 1);
+        if (type === "mood") {
+          Number.isNaN(moods[message]) ? (moods[message] = 1) : (moods[message] += 1);
         }
 
         const log = {

@@ -1,9 +1,9 @@
 import {Command, Flags} from '@oclif/core';
+import Sentiment from "sentiment";
 
-const Sentiment = require("sentiment");
-const fileAccessor = require("../utils/file");
+import { timeStamp, writeLineToCurrentFile } from '../utils/file';
 
-class LogCommand extends Command {
+export default class LogCommand extends Command {
   static description = "Add a new log";
 
 static flags = {
@@ -12,7 +12,7 @@ static flags = {
 };
 
   async run() {
-    const time = fileAccessor.timeStamp();
+    const time = timeStamp();
 
     const { flags } = await this.parse(LogCommand);
     const message = flags.message || "null";
@@ -23,8 +23,7 @@ static flags = {
 
     const composedMessage = `${time} | ${type} | sentiment:${sentimentScore.score} | ${message}`;
 
-    fileAccessor.writeLineToCurrentFile(composedMessage, type);
+    writeLineToCurrentFile(composedMessage, type);
   }
 }
 
-module.exports = LogCommand;

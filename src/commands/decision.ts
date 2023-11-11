@@ -1,10 +1,10 @@
 import {Command} from '@oclif/core'
-const fileAccessor = require('../utils/file')
-const inquirer = require('inquirer')
+import inquirer from 'inquirer'
+
+import {timeStamp, writeLineToCurrentFile} from '../utils/file'
 
 export default class DecisionCommand extends Command {
-
- static description = 'Decision journal'
+  static description = 'Decision journal'
   async run() {
     const responses = await inquirer.prompt([
       {
@@ -25,6 +25,7 @@ export default class DecisionCommand extends Command {
           'Resigned',
           'Frustrated',
           'Angry',
+          'Focused',
         ],
         message: 'Mental/Physical state:',
         name: 'mood',
@@ -42,11 +43,10 @@ export default class DecisionCommand extends Command {
       },
     ])
 
-    const time = fileAccessor.timeStamp()
+    const time = timeStamp()
     const meta = `mood:${responses.mood}, context:${responses.context}, problem:${responses.problem}`
     const line = `${time} | decision | ${meta} | ${responses.decision}`
 
-    fileAccessor.writeLineToCurrentFile(line)
+    writeLineToCurrentFile(line)
   }
 }
-
