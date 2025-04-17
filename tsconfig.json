@@ -2,7 +2,7 @@
   "compilerOptions": {
     "declaration": true,
     "forceConsistentCasingInFileNames": true,
-    "module": "Node16",
+    "module": "NodeNext",
     "outDir": "./dist",
     "pretty": true,
     "rootDirs": ["./src"],
@@ -11,7 +11,9 @@
     "noImplicitAny": false,
     "allowSyntheticDefaultImports": true,
     "noErrorTruncation": true,
-    "moduleResolution": "Node16"
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["./src/**/*"]
 }

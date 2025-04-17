@@ -7,27 +7,32 @@
   },
   "bugs": "https://github.com/UdaraJay/atm/issues",
   "dependencies": {
+    "@langchain/core": "^0.3.45",
+    "@langchain/google-genai": "^0.2.4",
     "@oclif/core": "^3.10.8",
-    "dateformat": "^3.0.3",
-    "inquirer": "^7.3.3",
-    "read-each-line-sync": "^1.0.5",
-    "sentiment": "^5.0.2",
     "@oclif/plugin-help": "^5",
-    "@oclif/plugin-plugins": "^4"
+    "@oclif/plugin-plugins": "^4",
+    "date-prompt": "^1.0.0",
+    "dateformat": "^3.0.3",
+    "dotenv": "^16.5.0",
+    "inquirer": "^7.3.3",
+    "langchain": "^0.3.22",
+    "read-each-line-sync": "^1.0.5",
+    "sentiment": "^5.0.2"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
-    "globby": "^10",
     "@oclif/prettier-config": "^0.2.1",
     "@oclif/test": "^3",
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^18",
     "chai": "^4",
-    "eslint-config-oclif-typescript": "^3",
-    "eslint-config-oclif": "^5",
-    "eslint-config-prettier": "^9.0.0",
     "eslint": "^8.53.0",
+    "eslint-config-oclif": "^5",
+    "eslint-config-oclif-typescript": "^3",
+    "eslint-config-prettier": "^9.0.0",
+    "globby": "^10",
     "mocha": "^10",
     "oclif": "^3.17.2",
     "shx": "^0.3.3",
@@ -57,7 +62,9 @@
       "@oclif/plugin-help",
       "@oclif/plugin-plugins"
     ],
-    "additionalHelpFlags": ["-h"],
+    "additionalHelpFlags": [
+      "-h"
+    ],
     "topicSeparator": " ",
     "topics": {
       "hello": {
@@ -67,6 +74,7 @@
   },
   "repository": "UdaraJay/uos",
   "scripts": {
+    "start": "node dist/index.js",
     "build": "shx rm -rf dist && tsc -b",
     "lint": "eslint . --ext .ts",
     "postpack": "shx rm -f oclif.manifest.json",
@@ -76,5 +84,6 @@
     "test": "echo NO TESTS",
     "version": "oclif readme && git add README.md"
   },
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
