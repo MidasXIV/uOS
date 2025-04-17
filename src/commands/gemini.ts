@@ -5,6 +5,7 @@ import path from 'node:path';
 
 import { readProjectsFile } from '../utils/file';
 import { formatProjectsForAnalysis, getProjectSummary } from '../utils/project-parsing';
+import LogCommand from './log';
 dotenv.config()
 
 export default class Gemini extends Command {
@@ -33,7 +34,6 @@ export default class Gemini extends Command {
   async run() {
     const { args, flags } = await this.parse(Gemini);
 
-    console.log(args, flags);
     try {
       const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
       const { ChatPromptTemplate } = await import('@langchain/core/prompts');
@@ -99,9 +99,11 @@ ${formattedProjects}`;
         };
       }
 
-      console.log(systemPrompt);
       // Execute the chain
       const response = await chain.invoke({ input });
+
+      // Log the response
+      LogCommand.run([`-m ${response}`, `-t gemini-reflection`]);
 
       this.log(response);
     } catch (error) {
