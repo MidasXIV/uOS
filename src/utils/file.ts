@@ -1,8 +1,11 @@
 import dateFormat from 'dateformat'
-import fs, { PathLike } from 'node:fs'
+import fs, {PathLike} from 'node:fs'
 import os from 'node:os'
+import path from 'node:path'
 const homedir = os.homedir()
+
 export const dir = `${homedir}/uOS_logs`
+export const projectsFilePath = `${dir}/projects.json`
 
 export const timeStamp = () => {
   const now = new Date()
@@ -72,4 +75,54 @@ const getRandomQuote = () => {
   const quote = quoteString.split('|').pop()
 
   return quote
+}
+
+export const readProjectsFile = async () => {
+  try {
+    const data = fs.readFileSync(projectsFilePath).toString('utf8')
+    return JSON.parse(data)
+  } catch (error: any) {
+    if (error.code === 'ENOENT') {
+      // File doesn't exist, create an empty one
+      fs.writeFileSync(projectsFilePath, '[]', 'utf8')
+      return []
+    }
+
+    // Handle other errors
+    console.error('Error reading projects file:', error.message)
+    return null
+  }
+}
+
+const createBackup = (filePath) => {
+  const backupDir = path.join(path.dirname(filePath), 'backups')
+  const timestamp = dateFormat(new Date(), 'yyyy-mm-dd_HH-MM-ss')
+  const backupFileName = `projects.backup.${timestamp}.json`
+  const backupPath = path.join(backupDir, backupFileName)
+
+  try {
+    // Ensure the backup directory exists
+    fs.mkdirSync(backupDir, {recursive: true})
+
+    // Copy the current file to the backup path
+    fs.copyFileSync(filePath, backupPath)
+
+    console.log(`Backup created: ${backupPath}`)
+  } catch (error: any) {
+    console.error('Error creating backup:', error.message)
+  }
+}
+
+export const updateProjectsFile = async (newData) => {
+  try {
+    // Create a backup before overwriting
+    createBackup(projectsFilePath)
+
+    // Write the new data to the file
+    fs.writeFileSync(projectsFilePath, JSON.stringify(newData, null, 2), 'utf8')
+
+    console.log('Projects file updated successfully!')
+  } catch (error: any) {
+    console.error('Error updating projects file:', error.message)
+  }
 }

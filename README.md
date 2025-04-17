@@ -47,7 +47,8 @@ $ npm install -g @midasxiv/uos
 5. **Test Locally:**
    - Run and test your application locally by using commands like:
      ```bash
-     uos mood
+     yarn build
+     bin\dev.cmd <command-name>
      ```
 
 6. **Re-Link as Needed:**
