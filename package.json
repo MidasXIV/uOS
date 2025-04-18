@@ -1,11 +1,11 @@
 {
-  "name": "@udarajay/atm",
+  "name": "@midasxiv/uos",
   "version": "0.5.1",
-  "author": "Udara Jay @UdaraJay",
+  "author": "Aman Shaikh @midasxiv",
   "bin": {
     "uos": "./bin/run.js"
   },
-  "bugs": "https://github.com/UdaraJay/atm/issues",
+  "bugs": "https://github.com/midasxiv/uos/issues",
   "dependencies": {
     "@langchain/core": "^0.3.45",
     "@langchain/google-genai": "^0.2.4",
@@ -47,7 +47,7 @@
     "/dist",
     "/oclif.manifest.json"
   ],
-  "homepage": "https://github.com/UdaraJay/atm",
+  "homepage": "https://github.com/midasxiv/uos",
   "keywords": [
     "cli",
     "logging"
@@ -72,7 +72,7 @@
       }
     }
   },
-  "repository": "UdaraJay/uos",
+  "repository": "midasxiv/uos",
   "scripts": {
     "start": "node dist/index.js",
     "build": "shx rm -rf dist && tsc -b",
