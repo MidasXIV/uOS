@@ -1,12 +1,11 @@
 import { Args, Command, Flags } from '@oclif/core';
-import * as dotenv from 'dotenv'
+import * as dotenv from 'dotenv';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { readProjectsFile } from '../utils/file';
-import { formatProjectsForAnalysis, getProjectSummary } from '../utils/project-parsing';
-import LogCommand from './log';
-dotenv.config()
+import { ScreenshotAnalysisAgent } from '../lib/agents/screenshot-analysis-agent';
+
+dotenv.config();
 
 export default class Gemini extends Command {
   static args = {
@@ -35,77 +34,56 @@ export default class Gemini extends Command {
     const { args, flags } = await this.parse(Gemini);
 
     try {
-      const { ChatGoogleGenerativeAI } = await import('@langchain/google-genai');
-      const { ChatPromptTemplate } = await import('@langchain/core/prompts');
-      const { StringOutputParser } = await import('@langchain/core/output_parsers');
-
-      // Get current projects and format them
-      const projects = await readProjectsFile();
-      const projectSummary = getProjectSummary(projects);
-      const formattedProjects = formatProjectsForAnalysis(projects);
-
-      // Initialize the Gemini model
-      const model = new ChatGoogleGenerativeAI({
-        maxOutputTokens: 2048,
-        maxRetries: 2,
-        model: 'gemini-2.0-flash',
-        temperature: 0,
-      });
-
-      // Create the system prompt
-      const systemPrompt = `You are a task monitoring assistant. I will send you a screenshot of my screen, and you need to analyze if I'm working on any of my active projects or tasks.
-
-${projectSummary}
-
-For each analysis, provide:
-1. Status: ["On Task", "Off Task", "Unclear"]
-2. If On Task:
-   - Which project and task you think I'm working on
-   - Confidence level (0-100%)
-   - Estimated time spent on this task (based on screen content)
-3. If Off Task:
-   - What you think I'm doing instead
-   - Suggestion for getting back on track
-4. General observations:
-   - Any patterns in my work habits
-   - Suggestions for improvement
-   - Potential distractions
-
-Current active projects and tasks:
-${formattedProjects}`;
-
-      // Create a prompt template
-      const prompt = ChatPromptTemplate.fromMessages([
-        ['system', systemPrompt],
-        ['human', '{input}'],
-      ]);
-
-      // Create a chain
-      const chain = prompt.pipe(model).pipe(new StringOutputParser());
-
-      // Prepare the input
-      let input: { image: string; text: string } | string = args.query;
-
-      if (flags.image) {
-        const imagePath = path.resolve(flags.image);
-        if (!fs.existsSync(imagePath)) {
-          throw new Error(`Image file not found: ${imagePath}`);
-        }
-
-        const imageBase64 = fs.readFileSync(imagePath, 'base64');
-        input = {
-          image: imageBase64,
-          text: args.query
-        };
+      const imagePath = path.resolve(flags.image);
+      if (!fs.existsSync(imagePath)) {
+        throw new Error(`Image file not found: ${imagePath}`);
       }
 
-      // Execute the chain
-      const response = await chain.invoke({ input });
+      const imageContent = fs.readFileSync(imagePath);
+      const agent = new ScreenshotAnalysisAgent();
+      const analysis = await agent.analyzeScreenshot(args.query, imageContent.toString('base64'));
 
-      // Log the response
-      LogCommand.run([`-m ${response}`, `-t gemini-reflection`]);
+      // Display the analysis results
+      this.log('\nAnalysis Results:');
+      this.log(`Status: ${analysis.status}`);
 
-      this.log(response);
+      if (analysis.project) {
+        this.log(`\nProject: ${analysis.project.name}`);
+        if (analysis.project.task) {
+          this.log(`Task: ${analysis.project.task}`);
+        }
+
+        this.log(`Confidence: ${analysis.project.confidence}%`);
+      }
+
+      if (analysis.timeSpent) {
+        this.log(`\nTime Spent: ${analysis.timeSpent.hours}h ${analysis.timeSpent.minutes}m`);
+      }
+
+      if (analysis.observations.currentActivity) {
+        this.log(`\nCurrent Activity: ${analysis.observations.currentActivity}`);
+      }
+
+      if (analysis.observations.suggestions?.length) {
+        this.log('\nSuggestions:');
+        for (const suggestion of analysis.observations.suggestions) this.log(`- ${suggestion}`);
+      }
+
+      if (analysis.observations.unresolvedIssues?.length) {
+        this.log('\nUnresolved Issues:');
+        for (const issue of analysis.observations.unresolvedIssues) this.log(`- ${issue}`);
+      }
+
+      if (analysis.observations.patterns?.length) {
+        this.log('\nWork Patterns:');
+        for (const pattern of analysis.observations.patterns) this.log(`- ${pattern}`);
+      }
+
+      if (analysis.observations.distractions?.length) {
+        this.log('\nPotential Distractions:');
+        for (const distraction of analysis.observations.distractions) this.log(`- ${distraction}`);
+      }
+
     } catch (error) {
       this.error(`Error: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
     }
