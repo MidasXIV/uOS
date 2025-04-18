@@ -1,16 +1,4 @@
-interface ITask {
-  cycles: number;
-  deadline?: string;
-  status: string;
-  text: string;
-}
-
-interface IProject {
-  description: string;
-  status: string;
-  tasks: ITask[];
-  title: string;
-}
+import { IProject } from '../types/project';
 
 export const formatProjectsForAnalysis = (projects: IProject[]): string => {
   const activeProjects = projects.filter(p => p.status === 'Progress');

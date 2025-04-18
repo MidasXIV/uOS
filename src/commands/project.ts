@@ -2,29 +2,9 @@ import {Command, ux} from '@oclif/core'
 import datePrompt from 'date-prompt'
 import inquirer from 'inquirer'
 
+import { ITask, Status } from '../types/project'
 import {readProjectsFile, timeStamp, updateProjectsFile} from '../utils/file'
 import LogCommand from './log'
-
-const Status = {
-  Complete: 'Complete',
-  Progress: 'Progress',
-} as const
-
-type IStatus = (typeof Status)[keyof typeof Status]
-
-interface ITask {
-  cycles: number
-  deadline?: string
-  status: IStatus
-  text: string
-}
-
-interface IProject {
-  description: string
-  status: IStatus
-  tasks: ITask[]
-  title: string
-}
 
 // Helper function to get project titles from projects
 const getProjectTitles = (projects) => projects.map((project) => project.title)
