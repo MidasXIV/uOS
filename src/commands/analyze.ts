@@ -1,7 +1,10 @@
 import { Command, Config, Flags } from '@oclif/core';
+import dotenv from 'dotenv';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+
+dotenv.config();
 
 import { ScreenshotAnalysisAgent } from '../lib/agents/screenshot-analysis-agent';
 import { ScreenshotUtils } from '../utils/screenshot';
@@ -95,7 +98,7 @@ export default class Analyze extends Command {
       }
 
       // Log token usage
-      const usage = this.tokenTracker.getTokenUsage('screenshot-analysis', 'gemini-2.0-flash');
+      const usage = this.tokenTracker.getTokenUsage('screenshot-analysis', process.env.GEMINI_MODEL || 'gemini-1.5-flash');
       if (usage) {
         this.log(`\nToken Usage Today: ${usage.days[this.getCurrentDate()] || 0}`);
         this.log(`Total Token Usage: ${usage.total}`);

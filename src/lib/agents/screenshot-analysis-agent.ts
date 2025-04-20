@@ -1,6 +1,9 @@
 import { StringOutputParser } from '@langchain/core/output_parsers';
 import { ChatPromptTemplate } from '@langchain/core/prompts';
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import * as dotenv from 'dotenv';
+
+dotenv.config();
 
 import LogCommand from '../../commands/log';
 import { AnalysisStatus, IAnalysisResult } from '../../types/analysis';
@@ -18,7 +21,7 @@ export class ScreenshotAnalysisAgent {
     this.model = new ChatGoogleGenerativeAI({
       maxOutputTokens: 2048,
       maxRetries: 2,
-      model: 'gemini-2.0-flash',
+      model: process.env.GEMINI_SCREENSHOT_ANALYSIS_MODEL || 'gemini-1.5-flash',
       temperature: 0.7,
     });
     this.tokenTracker = TokenTracker.getInstance();
@@ -49,12 +52,10 @@ export class ScreenshotAnalysisAgent {
     // Execute the chain
     const response = await chain.invoke({ input });
 
-    // Track token usage
-    // Note: This is an approximation since we don't have exact token counts
-    // from the Gemini API. We could improve this by using the actual token counts
-    // if the API provides them.
-    const estimatedTokens = Math.ceil((response.length + query.length + imageBase64.length) / 4);
-    this.tokenTracker.incrementTokenUsage('screenshot-analysis', 'gemini-2.0-flash', estimatedTokens);
+    // Track token usage using actual counts from metadata
+    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const totalTokens = Math.ceil((response.length + query.length + imageBase64.length) / 4);
+    this.tokenTracker.incrementTokenUsage('screenshot', modelName, totalTokens);
 
     // Log the response
     await LogCommand.run([`-m ${response}`, `-t gemini-reflection`]);
