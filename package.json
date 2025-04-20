@@ -18,7 +18,8 @@
     "inquirer": "^7.3.3",
     "langchain": "^0.3.22",
     "read-each-line-sync": "^1.0.5",
-    "sentiment": "^5.0.2"
+    "sentiment": "^5.0.2",
+    "sharp": "^0.34.1"
   },
   "devDependencies": {
     "@oclif/dev-cli": "^1",
@@ -27,6 +28,7 @@
     "@types/chai": "^4",
     "@types/mocha": "^9.0.0",
     "@types/node": "^18",
+    "@types/sharp": "^0.32.0",
     "chai": "^4",
     "eslint": "^8.53.0",
     "eslint-config-oclif": "^5",

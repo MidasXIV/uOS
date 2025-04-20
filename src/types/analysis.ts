@@ -1,22 +1,22 @@
-export type AnalysisStatus = 'On Task' | 'Off Task' | 'Unclear' | 'Unresolved';
+export type AnalysisStatus = 'Off Task' | 'On Task' | 'Unclear' | 'Unresolved';
 
 export interface IAnalysisResult {
-  status: AnalysisStatus;
+  observations: {
+    currentActivity?: string;
+    distractions?: string[];
+    patterns?: string[];
+    suggestions?: string[];
+    unresolvedIssues?: string[];
+  };
   project?: {
+    confidence: number;
     name: string;
     task?: string;
-    confidence: number;
   };
+  rawResponse: string;
+  status: AnalysisStatus;
   timeSpent?: {
     hours: number;
     minutes: number;
   };
-  observations: {
-    currentActivity?: string;
-    suggestions?: string[];
-    patterns?: string[];
-    distractions?: string[];
-    unresolvedIssues?: string[];
-  };
-  rawResponse: string;
 }
