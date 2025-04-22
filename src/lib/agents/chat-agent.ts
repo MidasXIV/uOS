@@ -2,7 +2,6 @@ import { AIMessage, HumanMessage, SystemMessage } from '@langchain/core/messages
 import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
 import * as dotenv from 'dotenv';
 
-import FRIDAY_CHAT_PROMPT from '../../utils/friday-chat-prompt';
 import { TokenTracker } from '../../utils/token-tracking';
 
 dotenv.config();
@@ -29,8 +28,6 @@ export class ChatAgent {
 
   async initialize(systemPrompt: string): Promise<void> {
     this.systemPrompt = systemPrompt;
-    // TODO: do not override user prompt in future
-    this.systemPrompt = FRIDAY_CHAT_PROMPT;
     this.clearHistory();
   }
 

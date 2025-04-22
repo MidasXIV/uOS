@@ -2,6 +2,7 @@ import { Command, Config, Flags, ux } from '@oclif/core';
 import * as dotenv from 'dotenv';
 
 import { ChatAgent } from '../lib/agents/chat-agent';
+import { DEFAULT_SYS_PROMPT, FRIDAY_SYS_PROMPT, THERAPY_AGENT_PROMPT } from '../utils/chat-system-prompt';
 import { writeLineToCurrentFile } from '../utils/file';
 import { TokenTracker } from '../utils/token-tracking';
 
@@ -22,6 +23,11 @@ export default class Chat extends Command {
       default: 'You are a helpful AI assistant.',
       description: 'System prompt to set the behavior of the AI',
     }),
+    therapy: Flags.boolean({
+      char: 't',
+      default: false,
+      description: 'Set the AI to behave like a therapist',
+    })
   };
 
   private agent: ChatAgent;
@@ -38,8 +44,23 @@ export default class Chat extends Command {
     const { flags } = await this.parse(Chat);
 
     try {
+      // Determine the system prompt based on flags
+      let systemPrompt: string = DEFAULT_SYS_PROMPT;
+
+      switch (true) {
+        case flags.therapy: {
+          systemPrompt = THERAPY_AGENT_PROMPT;
+          break;
+        }
+
+        default: {
+          systemPrompt = flags.system || FRIDAY_SYS_PROMPT;
+          break;
+        }
+      }
+
       // Initialize the agent with the system prompt
-      await this.agent.initialize(flags.system);
+      await this.agent.initialize(systemPrompt);
 
       this.log('\n🤖 Chat session started. Type "exit" or "quit" to end the session.\n');
       this.isChatting = true;
@@ -95,3 +116,4 @@ export default class Chat extends Command {
     return ux.prompt(question);
   }
 }
+
