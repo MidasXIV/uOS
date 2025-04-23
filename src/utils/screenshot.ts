@@ -32,8 +32,8 @@ export class ScreenshotUtils {
       const gridSize = Math.ceil(Math.sqrt(numImages));
 
       // Calculate individual image dimensions
-      const individualWidth = 400;
-      const individualHeight = 300;
+      const individualWidth = 1024;
+      const individualHeight = 768;
 
       // Create a new image with white background
       const collage = sharp({
@@ -45,13 +45,21 @@ export class ScreenshotUtils {
         }
       });
 
-      // Prepare composite operations
-      const composites = imagePaths.map((imagePath, index) => {
+      // Resize images to fit the grid cell dimensions
+      const resizedImages = await Promise.all(imagePaths.map(async (imagePath) => {
+        const resizedBuffer = await sharp(imagePath)
+          .resize(individualWidth, individualHeight, { fit: 'cover' })
+          .toBuffer();
+        return { input: resizedBuffer };
+      }));
+
+      // Prepare composite operations with resized images
+      const composites = resizedImages.map((resizedImage, index) => {
         const row = Math.floor(index / gridSize);
         const col = index % gridSize;
 
         return {
-          input: imagePath,
+          ...resizedImage,
           left: col * individualWidth,
           top: row * individualHeight
         };

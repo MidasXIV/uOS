@@ -27,7 +27,7 @@ export class ScreenshotAnalysisAgent {
     this.tokenTracker = TokenTracker.getInstance();
   }
 
-  public async analyzeScreenshot(query: string, imagePath: string): Promise<IAnalysisResult> {
+  public async analyzeScreenshot(query: string, imageBase64: string): Promise<IAnalysisResult> {
     await this.initializeProjects();
 
     // Create the system prompt
@@ -43,7 +43,8 @@ export class ScreenshotAnalysisAgent {
     const chain = prompt.pipe(this.model).pipe(new StringOutputParser());
 
     // Prepare the input
-    const imageBase64 = Buffer.from(imagePath).toString('base64');
+    // const imageBase64 = Buffer.from(imagePath).toString('base64');
+    
     const input = {
       image: imageBase64,
       text: query
@@ -52,8 +53,9 @@ export class ScreenshotAnalysisAgent {
     // Execute the chain
     const response = await chain.invoke({ input });
 
+    console.log(response);
     // Track token usage using actual counts from metadata
-    const modelName = process.env.GEMINI_MODEL || 'gemini-1.5-flash';
+    const modelName = process.env.GEMINI_SCREENSHOT_ANALYSIS_MODEL || 'gemini-1.5-flash';
     const totalTokens = Math.ceil((response.length + query.length + imageBase64.length) / 4);
     this.tokenTracker.incrementTokenUsage('screenshot', modelName, totalTokens);
 

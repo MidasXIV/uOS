@@ -1,33 +1,31 @@
-import { Command, Config, Flags } from '@oclif/core';
-import dotenv from 'dotenv';
-import fs from 'node:fs';
-import os from 'node:os';
-import path from 'node:path';
+import {Command, Config, Flags} from '@oclif/core'
+import dotenv from 'dotenv'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 
-dotenv.config();
+dotenv.config()
 
-import { ScreenshotAnalysisAgent } from '../lib/agents/screenshot-analysis-agent';
-import { ScreenshotUtils } from '../utils/screenshot';
-import { TokenTracker } from '../utils/token-tracking';
+import {ScreenshotAnalysisAgent} from '../lib/agents/screenshot-analysis-agent'
+import {ScreenshotUtils} from '../utils/screenshot'
+import {TokenTracker} from '../utils/token-tracking'
 
-const homedir = os.homedir();
-const SCREENSHOT_DIR = path.join(homedir, 'uOS_logs', 'screenshots');
-const COLLAGE_DIR = path.join(homedir, 'uOS_logs', 'collages');
+const homedir = os.homedir()
+const SCREENSHOT_DIR = path.join(homedir, 'uOS_logs', 'screenshots')
+const COLLAGE_DIR = path.join(homedir, 'uOS_logs', 'collages')
 
 export default class Analyze extends Command {
-  static description = 'Periodically analyze screenshots and create daily collages';
+  static description = 'Periodically analyze screenshots and create daily collages'
 
-  static examples = [
-    `$ uos analyze --interval 10`,
-  ];
+  static examples = [`$ uos analyze --interval 10`]
 
   static flags = {
     createCollage: Flags.boolean({
       char: 'c',
       default: false,
-      description: 'Create a collage of today\'s screenshots',
+      description: "Create a collage of today's screenshots",
     }),
-    help: Flags.help({ char: 'h' }),
+    help: Flags.help({char: 'h'}),
     interval: Flags.integer({
       char: 'i',
       default: 10,
@@ -38,124 +36,146 @@ export default class Analyze extends Command {
       default: false,
       description: 'Stop the analysis process',
     }),
-  };
+  }
 
-  private agent: ScreenshotAnalysisAgent;
-  private analysisInterval: NodeJS.Timeout | null = null;
-  private tokenTracker: TokenTracker;
+  private agent: ScreenshotAnalysisAgent
+  private analysisInterval: NodeJS.Timeout | null = null
+  private tokenTracker: TokenTracker
 
   constructor(argv: string[], config: Config) {
-    super(argv, config);
-    this.agent = new ScreenshotAnalysisAgent();
-    this.tokenTracker = TokenTracker.getInstance();
+    super(argv, config)
+    this.agent = new ScreenshotAnalysisAgent()
+    this.tokenTracker = TokenTracker.getInstance()
   }
 
   async run() {
-    const { flags } = await this.parse(Analyze);
+    const {flags} = await this.parse(Analyze)
 
     // Ensure directories exist
-    fs.mkdirSync(SCREENSHOT_DIR, { recursive: true });
-    fs.mkdirSync(COLLAGE_DIR, { recursive: true });
+    fs.mkdirSync(SCREENSHOT_DIR, {recursive: true})
+    fs.mkdirSync(COLLAGE_DIR, {recursive: true})
 
     if (flags.stop) {
-      this.stopAnalysis();
-      return;
+      this.stopAnalysis()
+      return
     }
 
     if (flags.createCollage) {
-      await this.createDailyCollage();
-      return;
+      await this.createDailyCollage()
+      return
     }
 
     // Start periodic analysis
-    this.startAnalysis(flags.interval);
+    this.startAnalysis(flags.interval)
   }
 
   private async analyzeAndCapture(): Promise<void> {
     try {
-      const timestamp = new Date().toISOString().replaceAll(/[.:]/g, '-');
-      const screenshotPath = path.join(SCREENSHOT_DIR, `screenshot-${timestamp}.png`);
+      const timestamp = new Date().toISOString().replaceAll(/[.:]/g, '-')
+      const screenshotPath = path.join(SCREENSHOT_DIR, `screenshot-${timestamp}.png`)
 
       // Capture screenshot using ScreenshotUtils
-      await ScreenshotUtils.captureScreenshot(screenshotPath);
+      await ScreenshotUtils.captureScreenshot(screenshotPath)
 
       // Analyze the screenshot
-      const imageContent = fs.readFileSync(screenshotPath);
+      const imageContent = fs.readFileSync(screenshotPath)
       const analysis = await this.agent.analyzeScreenshot(
         'Analyze current screen activity',
-        imageContent.toString('base64')
-      );
+        imageContent.toString('base64'),
+      )
 
       // Log the analysis
-      this.log(`\nAnalysis at ${new Date().toLocaleTimeString()}:`);
-      this.log(`Status: ${analysis.status}`);
+      this.log(`\nAnalysis at ${new Date().toLocaleTimeString()}:`)
+      this.log(`Status: ${analysis.status}`)
 
       if (analysis.observations.unresolvedIssues?.length) {
-        this.log('\nUnresolved Issues:');
+        this.log('\nUnresolved Issues:')
         for (const issue of analysis.observations.unresolvedIssues) {
-          this.log(`- ${issue}`);
+          this.log(`- ${issue}`)
         }
       }
 
       // Log token usage
-      const usage = this.tokenTracker.getTokenUsage('screenshot-analysis', process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+      const usage = this.tokenTracker.getTokenUsage(
+        'screenshot-analysis',
+        process.env.GEMINI_MODEL || 'gemini-1.5-flash',
+      )
       if (usage) {
-        this.log(`\nToken Usage Today: ${usage.days[this.getCurrentDate()] || 0}`);
-        this.log(`Total Token Usage: ${usage.total}`);
+        this.log(`\nToken Usage Today: ${usage.days[this.getCurrentDate()] || 0}`)
+        this.log(`Total Token Usage: ${usage.total}`)
       }
-
     } catch (error) {
-      this.error(`Error during analysis: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      this.error(`Error during analysis: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
     }
   }
 
-  private async createDailyCollage(): Promise<void> {
+  private async createDailyCollage(date?: string): Promise<void> {
     try {
-      const today = this.getCurrentDate();
-      const todayScreenshots = fs.readdirSync(SCREENSHOT_DIR)
-        .filter(file => file.startsWith(`screenshot-${today}`))
-        .map(file => path.join(SCREENSHOT_DIR, file));
+      const targetDate = date || this.getCurrentDate()
+      const today = this.getCurrentDate()
 
-      if (todayScreenshots.length === 0) {
-        this.log('No screenshots found for today');
-        return;
+      // Get all screenshots for the target date
+      const targetScreenshots = fs
+        .readdirSync(SCREENSHOT_DIR)
+        .filter((file) => file.startsWith(`screenshot-${targetDate}`))
+        .map((file) => path.join(SCREENSHOT_DIR, file))
+
+        console.log(targetScreenshots);
+      if (targetScreenshots.length > 0) {
+        // Create collage for the target date
+        const collagePath = path.join(COLLAGE_DIR, `collage-${targetDate}.png`)
+        await ScreenshotUtils.createImageCollage(targetScreenshots, collagePath)
+
+        this.log(`Collage created for ${targetDate}: ${collagePath}`)
+      } else {
+        this.log(`No screenshots found for ${targetDate}`)
       }
 
-      // Create collage using ScreenshotUtils
-      const collagePath = path.join(COLLAGE_DIR, `collage-${today}.png`);
-      await ScreenshotUtils.createImageCollage(todayScreenshots, collagePath);
+      // Handle backlog if no specific date is provided
+      if (!date) {
+        const allDates = fs
+          .readdirSync(SCREENSHOT_DIR)
+          .map((file) => file.match(/^screenshot-(\d{4}-\d{2}-\d{2})T/)?.[1])
+          .filter(Boolean)
+          .filter((d) => d && d < today) // Only process past dates
+          .filter((d) => !fs.existsSync(path.join(COLLAGE_DIR, `collage-${d}.png`))) // Skip dates with existing collages
+        
+        const uniqueDates = [...new Set(allDates)]
 
-      this.log(`Collage created: ${collagePath}`);
-
+        console.log(uniqueDates)
+        for (const backlogDate of uniqueDates) {
+          this.createDailyCollage(backlogDate)
+        }
+      }
     } catch (error) {
-      this.error(`Error creating collage: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
+      this.error(`Error creating collage: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
     }
   }
 
   private getCurrentDate(): string {
-    return new Date().toISOString().split('T')[0].replaceAll('-', '');
+    return new Date().toISOString().split('T')[0].replaceAll('-', '')
   }
 
   private startAnalysis(interval: number): void {
-    this.log(`Starting periodic analysis every ${interval} minutes...`);
-    this.log('Press Ctrl+C to stop');
+    this.log(`Starting periodic analysis every ${interval} minutes...`)
+    this.log('Press Ctrl+C to stop')
 
     // Run immediately on start
-    this.analyzeAndCapture();
+    this.analyzeAndCapture()
 
     // Then run every interval minutes
     this.analysisInterval = setInterval(() => {
-      this.analyzeAndCapture();
-    }, interval * 60 * 1000);
+      this.analyzeAndCapture()
+    }, interval * 60 * 1000)
   }
 
   private stopAnalysis(): void {
     if (this.analysisInterval) {
-      clearInterval(this.analysisInterval);
-      this.analysisInterval = null;
-      this.log('Analysis stopped');
+      clearInterval(this.analysisInterval)
+      this.analysisInterval = null
+      this.log('Analysis stopped')
     } else {
-      this.log('No analysis process running');
+      this.log('No analysis process running')
     }
   }
 }
