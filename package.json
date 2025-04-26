@@ -7,8 +7,9 @@
   },
   "bugs": "https://github.com/midasxiv/uos/issues",
   "dependencies": {
-    "@langchain/core": "^0.3.45",
+    "@langchain/core": "^0.3.49",
     "@langchain/google-genai": "^0.2.4",
+    "@langchain/openai": "^0.5.7",
     "@oclif/core": "^3.10.8",
     "@oclif/plugin-help": "^5",
     "@oclif/plugin-plugins": "^4",
@@ -16,7 +17,7 @@
     "dateformat": "^3.0.3",
     "dotenv": "^16.5.0",
     "inquirer": "^7.3.3",
-    "langchain": "^0.3.22",
+    "langchain": "^0.3.24",
     "read-each-line-sync": "^1.0.5",
     "sentiment": "^5.0.2",
     "sharp": "^0.34.1"

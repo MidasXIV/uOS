@@ -9,6 +9,7 @@ dotenv.config()
 import {ScreenshotAnalysisAgent} from '../lib/agents/screenshot-analysis-agent'
 import {ScreenshotUtils} from '../utils/screenshot'
 import {TokenTracker} from '../utils/token-tracking'
+import LogCommand from './log'
 
 const homedir = os.homedir()
 const SCREENSHOT_DIR = path.join(homedir, 'uOS_logs', 'screenshots')
@@ -85,15 +86,8 @@ export default class Analyze extends Command {
       )
 
       // Log the analysis
-      this.log(`\nAnalysis at ${new Date().toLocaleTimeString()}:`)
-      this.log(`Status: ${analysis.status}`)
-
-      if (analysis.observations.unresolvedIssues?.length) {
-        this.log('\nUnresolved Issues:')
-        for (const issue of analysis.observations.unresolvedIssues) {
-          this.log(`- ${issue}`)
-        }
-      }
+      this.log(`\nAnalysis at ${new Date().toLocaleTimeString()}: Status: ${analysis.status} | ${analysis.summary}`)
+      LogCommand.run([`-m Status: ${analysis.status} | ${analysis.summary}`,'-t ss-analysis'])
 
       // Log token usage
       const usage = this.tokenTracker.getTokenUsage(

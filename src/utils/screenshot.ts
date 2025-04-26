@@ -6,6 +6,7 @@ const execAsync = promisify(exec);
 
 export class ScreenshotUtils {
   public static async captureScreenshot(outputPath: string): Promise<void> {
+    const preOptimizedFilePath = outputPath.replace('.png', '-post.png');
     try {
       // For Windows, we'll use the built-in Snipping Tool
       await execAsync(`powershell -command "Add-Type -AssemblyName System.Windows.Forms;[System.Windows.Forms.SendKeys]::SendWait('{PRTSC}');"`);
@@ -19,6 +20,14 @@ export class ScreenshotUtils {
 
       // Save the screenshot from clipboard
       await execAsync(`powershell -command "$image = Get-Clipboard -Format Image; $image.Save('${outputPath}');"`);
+
+      // Optimize the screenshot by converting to grayscale and resizing
+      // No need to optimize always uses 2800 tokens
+      // await sharp(outputPath)
+      //   .grayscale() // Convert to grayscale
+      //   .resize({ fit: 'contain', height: 1200, width: 1920 }) // Resize while maintaining aspect ratio and prevent wrapping
+      //   .toFormat('png', { compressionLevel: 8 }) // Optimize PNG compression
+      //   .toFile(preOptimizedFilePath); // Save as optimized PNG
 
     } catch (error) {
       throw new Error(`Failed to capture screenshot: ${error instanceof Error ? error.message : 'Unknown error occurred'}`);
