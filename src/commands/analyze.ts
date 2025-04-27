@@ -14,19 +14,13 @@ import LogCommand from './log'
 
 const homedir = os.homedir()
 const SCREENSHOT_DIR = path.join(homedir, 'uOS_logs', 'screenshots')
-const COLLAGE_DIR = path.join(homedir, 'uOS_logs', 'collages')
 
 export default class Analyze extends Command {
-  static description = 'Periodically analyze screenshots and create daily collages'
+  static description = 'Periodically analyze screenshots'
 
   static examples = [`$ uos analyze --interval 10`]
 
   static flags = {
-    createCollage: Flags.boolean({
-      char: 'c',
-      default: false,
-      description: "Create a collage of today's screenshots",
-    }),
     help: Flags.help({char: 'h'}),
     interval: Flags.integer({
       char: 'i',
@@ -55,15 +49,9 @@ export default class Analyze extends Command {
 
     // Ensure directories exist
     fs.mkdirSync(SCREENSHOT_DIR, {recursive: true})
-    fs.mkdirSync(COLLAGE_DIR, {recursive: true})
 
     if (flags.stop) {
       this.stopAnalysis()
-      return
-    }
-
-    if (flags.createCollage) {
-      await this.createDailyCollage()
       return
     }
 
@@ -104,49 +92,6 @@ export default class Analyze extends Command {
       logAnalysisResult(timestamp, analysis);
     } catch (error) {
       this.error(`Error during analysis: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
-    }
-  }
-
-  private async createDailyCollage(date?: string): Promise<void> {
-    try {
-      const targetDate = date || this.getCurrentDate()
-      const today = this.getCurrentDate()
-
-      // Get all screenshots for the target date
-      const targetScreenshots = fs
-        .readdirSync(SCREENSHOT_DIR)
-        .filter((file) => file.startsWith(`screenshot-${targetDate}`))
-        .map((file) => path.join(SCREENSHOT_DIR, file))
-
-        console.log(targetScreenshots);
-      if (targetScreenshots.length > 0) {
-        // Create collage for the target date
-        const collagePath = path.join(COLLAGE_DIR, `collage-${targetDate}.png`)
-        await ScreenshotUtils.createImageCollage(targetScreenshots, collagePath)
-
-        this.log(`Collage created for ${targetDate}: ${collagePath}`)
-      } else {
-        this.log(`No screenshots found for ${targetDate}`)
-      }
-
-      // Handle backlog if no specific date is provided
-      if (!date) {
-        const allDates = fs
-          .readdirSync(SCREENSHOT_DIR)
-          .map((file) => file.match(/^screenshot-(\d{4}-\d{2}-\d{2})T/)?.[1])
-          .filter(Boolean)
-          .filter((d) => d && d < today) // Only process past dates
-          .filter((d) => !fs.existsSync(path.join(COLLAGE_DIR, `collage-${d}.png`))) // Skip dates with existing collages
-        
-        const uniqueDates = [...new Set(allDates)]
-
-        console.log(uniqueDates)
-        for (const backlogDate of uniqueDates) {
-          this.createDailyCollage(backlogDate)
-        }
-      }
-    } catch (error) {
-      this.error(`Error creating collage: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
     }
   }
 
