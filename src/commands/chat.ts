@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 
 import { ChatAgent } from '../lib/agents/chat-agent';
 import { DEFAULT_SYS_PROMPT, FRIDAY_SYS_PROMPT, THERAPY_AGENT_PROMPT } from '../utils/chat-system-prompt';
-import { writeLineToCurrentFile } from '../utils/file';
+import { timeStamp, writeLineToCurrentFile } from '../utils/file';
 import { TokenTracker } from '../utils/token-tracking';
 
 dotenv.config();
@@ -92,9 +92,9 @@ export default class Chat extends Command {
             this.log(`\nAI: ${response}\n`);
 
             // Log the interaction with timestamp
-            const timestamp = new Date().toLocaleTimeString();
+            const time = timeStamp()
             await writeLineToCurrentFile(
-              `[${timestamp}] Chat - User: ${userInput} | AI: ${response}`,
+              `${time} | Chat | User: ${userInput} | AI: ${response}`,
               'chat'
             );
           } catch (error) {
