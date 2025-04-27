@@ -7,6 +7,7 @@ import path from 'node:path'
 dotenv.config()
 
 import {ScreenshotAnalysisAgent} from '../lib/agents/screenshot-analysis-agent'
+import { logAnalysisResult } from '../utils/analysis-logger';
 import {ScreenshotUtils} from '../utils/screenshot'
 import {TokenTracker} from '../utils/token-tracking'
 import LogCommand from './log'
@@ -29,7 +30,7 @@ export default class Analyze extends Command {
     help: Flags.help({char: 'h'}),
     interval: Flags.integer({
       char: 'i',
-      default: 10,
+      default: 5,
       description: 'Analysis interval in minutes',
     }),
     stop: Flags.boolean({
@@ -98,6 +99,9 @@ export default class Analyze extends Command {
         this.log(`\nToken Usage Today: ${usage.days[this.getCurrentDate()] || 0}`)
         this.log(`Total Token Usage: ${usage.total}`)
       }
+
+      // Log the analysis result into a daily JSON file
+      logAnalysisResult(timestamp, analysis);
     } catch (error) {
       this.error(`Error during analysis: ${error instanceof Error ? error.message : 'Unknown error occurred'}`)
     }
