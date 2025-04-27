@@ -18,6 +18,7 @@ export function logAnalysisResult(timestamp: string, analysis: object): void {
   // Get the current date in YYYYMMDD format
   const currentDate = timestamp.split('T')[0].replaceAll('-', '');
 
+  console.log(`Logging analysis result for date: ${currentDate}`);
   // Path to the daily log file
   const logFilePath = path.join(ANALYSIS_LOG_DIR, `analysis-${currentDate}.json`);
 
@@ -42,3 +43,15 @@ export function logAnalysisResult(timestamp: string, analysis: object): void {
     console.error('Error writing to log file:', error);
   }
 }
+
+// returns the last X file paths from the logs directory
+export function getLastXAnalysisLogsFilePaths(x: number = 5): string[] {
+  const files = fs.readdirSync(ANALYSIS_LOG_DIR).filter(file => file.endsWith('.json'));
+  const sortedFiles = files.sort((a, b) => {
+    const dateA = new Date(a.split('-')[1].replace('.json', ''));
+    const dateB = new Date(b.split('-')[1].replace('.json', ''));
+    return dateB.getTime() - dateA.getTime(); // Sort in descending order
+  });
+  return sortedFiles.slice(0, x).map(file => path.join(ANALYSIS_LOG_DIR, file));
+}
+
