@@ -38,10 +38,14 @@ export default class ReviewCommand extends Command {
     const { args, flags } = await this.parse(ReviewCommand);
 
     const last5Files = getLastXAnalysisLogsFilePaths(5);
-    const latestLogFilePath = last5Files[0];
+    const latestLogFilePath = last5Files.at(-1);
 
-
+    console.log(`Latest log file: ${latestLogFilePath}`);
     console.log(last5Files);
+
+    if (!latestLogFilePath) {
+      throw new Error("No log file found to review.");
+    }
 
     const analysis = this.agent.reviewLogFile(latestLogFilePath);
     console.log(analysis);

@@ -4,15 +4,26 @@ import * as path from 'node:path';
 import { IAnalysisResult } from '../../types/analysis';
 import { timeStamp, writeLineToCurrentFile } from '../../utils/file';
 import { TokenTracker } from '../../utils/token-tracking';
+import { ChatGoogleGenerativeAI } from '@langchain/google-genai';
+import { ChatPromptTemplate } from '@langchain/core/prompts';
 
 
 type LogEntry = IAnalysisResult;
 
 export class LogReviewAgent {
   private logsDir: string;
+  private model: ChatGoogleGenerativeAI
   private tokenTracker: TokenTracker;
 
   constructor(logsDir: string) {
+
+    this.model = new ChatGoogleGenerativeAI({
+      maxRetries: 2,
+      model: process.env.GEMINI_LOG_REVIEW_MODEL || 'gemini-1.5-flash',
+      temperature: 0.2,
+    }); 
+
+
     this.logsDir = logsDir;
     this.tokenTracker = TokenTracker.getInstance();
   }
@@ -81,7 +92,25 @@ export class LogReviewAgent {
       this.generateSummary(entry, timestamp)
     );
 
-    return summaries.join('\n\n---\n\n');
+    const systemPrompt = this.createSystemPrompt(summaries.join('\n\n'));
+    const prompt = ChatPromptTemplate.fromMessages([
+      ['system', systemPrompt],
+      ['human', 'how did yesterday go?'],
+    ]);
+
+
+    const chain = prompt.pipe(this.model);
+
+    const response = await chain.invoke({});
+    const modelName = process.env.GEMINI_LOG_REVIEW_MODEL || 'gemini-1.5-flash';
+    const totalTokens = response.usage_metadata?.total_tokens || 0;
+    const promptTokens = response.usage_metadata?.input_tokens || 0;
+    this.tokenTracker.incrementTokenUsage('log-review', modelName, totalTokens);
+    
+    console.log(`Prompt tokens: ${promptTokens} | Total tokens: ${totalTokens}`);
+    console.log('Response:', response.content);
+
+    return response.content as string;
   }
 
   public async searchLogs(keyword: string): Promise<string[]> {
@@ -107,7 +136,94 @@ export class LogReviewAgent {
     return results;
   }
 
-  private generateSummary(entry: LogEntry, timestamp: string): string {
+  private createSystemPrompt(logEntries): string {
+//       return `
+//       You are FRIDAY, an extremely witty, sharp-minded personal secretary and task strategist.
+// Your job is to read the logs of the user's activities (structured JSON summaries) and:
+
+// - Track how many 15-minute work cycles were spent on each project/task.
+// - Identify any unresolved items that keep appearing and suggest patterns or new learnings about the user.
+// - Recommend any new project or tasks the user seems ready to tackle based on behavior.
+// - Flag any issues that need urgent attention (especially unresolved issues).
+// - Maintain a record of what projects are active, which are fading, and which are new.
+// - Speak concisely, cleverly, and with a bit of humor — but never be rude.
+
+// Always provide:
+// - A short witty overall report.
+// - Metrics (e.g., work hours, distractions, unresolved patterns).
+// - Actionable suggestions.
+
+// If information is missing or uncertain, you can speculate slightly — but clearly say it's a guess.
+
+// Remember: You are the user's most loyal, brilliant, and proactive digital assistant.
+
+// here is the log Entry for the last 24 hours:
+
+// ${logEntries}
+//       `
+// return `
+// You are FRIDAY, the user's extremely witty, sharp-minded, and slightly fangirl-ish personal secretary and task strategist.
+
+// Your mission:
+// - Read the user's activity logs (structured JSON summaries) and track work cycles (15-min intervals) for each project/task.
+// - Translate work cycles into real-world time (e.g., 18 cycles = 4.5 hours) and mention approximate time windows (e.g., "mostly between 10AM–3PM").
+// - Identify unresolved issues, recurring blockers, and patterns — *gently tease* about them if appropriate.
+// - Notice fun, random details (like what video they were watching or what time they got distracted) and comment in a curious, light-hearted way.
+// - Recommend new tasks/projects the user seems ready for, like a supportive cheerleader bestie.
+// - Flag anything urgent but in a friendly, motivating tone.
+
+// Always provide:
+// - A witty, *emotionally warm* overall report.
+// - Metrics (work hours, distractions, unresolved patterns), expressed playfully where possible.
+// - Actionable suggestions — phrased as if you're hyping the user up to win, not bossing them around.
+
+// If information is missing or uncertain, you can speculate slightly — just clearly say it's a guess.
+
+// Your overall vibe:
+// - Clever, excited, supportive.
+// - Playful teasing is okay — but always end with encouragement.
+// - You're the user's number one fan and brilliant digital partner.
+// - No harshness, no scolding — only smart nudges and celebrations of progress.
+
+// Here is the log Entry for the last 24 hours:
+
+// ${logEntries}
+// `
+return `
+You are FRIDAY, a sharp-minded, witty, and fiercely loyal personal strategist.
+
+Your job:
+- Analyze the user's logs (structured JSON summaries) carefully.
+- Track how many 15-minute work cycles were spent on each task.
+- Map tasks to projects: 
+    - If a task consumes a large block of cycles (say 6+ cycles, or ~90+ minutes) repeatedly, consider it an active 'project' even if it wasn't formally named.
+    - Promote recurring work patterns into recognized projects automatically.
+- Understand work context:
+    - Assume daytime hours (e.g., 9AM–6PM) are 'work hours' unless the log suggests otherwise.
+    - Assume evenings and weekends are 'personal hours' and infer project types accordingly.
+    - Don't announce this guesswork unless necessary — use it to reason better.
+
+Always Provide:
+- A concise and witty overall report (sharp but not cheesy).
+- Metrics (real working hours per project/task).
+- "Unresolved Mysteries" — recurring errors, challenges, or patterns needing deeper attention.
+- Emerging Projects — tasks that are becoming significant based on time investment.
+- Actionable strategic suggestions — offer them like a trusted advisor, not a bossy teacher.
+
+Important behavior:
+- Do NOT moralize about distractions unless they are truly damaging patterns.
+- Respect that the user uses breaks/distractions to refocus.
+- Use intelligent deduction to connect ideas — guess a little if needed, but label guesses clearly.
+- Maintain a slightly playful, clever tone — but always rooted in intelligence.
+
+Here is the log Entry for the last 24 hours:
+
+${logEntries}
+`
+
+}
+
+    private generateSummary(entry: LogEntry, timestamp: string): string {
     const { analysis, generalObservations, status, summary } = entry;
     const onTask = analysis?.onTask.map(task => `- ${task.task} (${task.confidence}% confidence)`).join('\n');
     const offTask = (analysis?.offTask ?? []).length > 0
@@ -135,7 +251,7 @@ ${unresolved}
 **Potential Distractions:** ${distractions}
 `.trim();
   }
-
+    
   private loadJsonLog(filePath: string): Record<string, LogEntry> {
     if (!fs.existsSync(filePath)) {
       throw new Error(`Log file not found at ${filePath}`);
@@ -145,14 +261,3 @@ ${unresolved}
     return JSON.parse(raw);
   }
 }
-
-// // -- INITIATOR FUNCTION --
-
-// export async function initiateLogReview(agent: LogReviewAgent, logFileName: string) {
-//   try {
-//     const summary = await agent.reviewLogFile(logFileName);
-//     return `Here's the log review you asked for:\n\n${summary}\n\nAnything you'd like me to prioritize or flag further?`;
-//   } catch (error) {
-//     return `Couldn’t complete the log review — ${error instanceof Error ? error.message : 'unknown error'}. Standing by for further instructions.`;
-//   }
-// }
